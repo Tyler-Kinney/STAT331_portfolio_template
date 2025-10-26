@@ -378,14 +378,47 @@ The following assignments satisfy the above criteria:
 
 ```{r}
 #| label: r-2-1
-
+# Challenge 4 Graph revised
+ca_childcare |>
+group_by(Region, study_year) |>
+  summarize(Overall_avg_Family_Cost = (mean(mfcc_infant) +
+                               mean(mfcc_toddler) +
+                               mean(mfcc_preschool)) / 3,
+    Overall_avg_Center_Cost = (mean(mc_infant) +
+                               mean(mc_toddler) +
+                               mean(mc_preschool)) / 3,
+    .groups = "drop") |>
+  ggplot(mapping = aes(x = Overall_avg_Family_Cost,
+                       y = Overall_avg_Center_Cost,
+                       color = Region)) +
+  geom_point() +
+  facet_wrap(~ study_year) +
+  labs(
+  title = 'As Household Income Increases, Center-Based Infant Care Becomes More Expensive',
+  subtitle = 'Average weekly costs (children aged 0–54 months) by region and study year',
+  x = 'Average Weekly Family Childcare Cost',
+  y = 'Average Weekly Center-Based Childcare Cost',
+  color = "California Region") +
+  theme_bw() +
+  scale_color_brewer(palette = 'Set3') +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  scale_x_continuous(labels = scales::label_dollar())
 ```
 
 -   Example of **dplyr** pipeline
 
 ```{r}
 #| label: r-2-2
-
+# Lab 3 Question 7
+teacher_evals_clean |>
+  distinct(teacher_id, .keep_all = TRUE) |>
+  select(teacher_id,
+         sex,
+         academic_degree,
+         seniority) |>
+  count(sex, academic_degree, seniority) |>
+  group_by(academic_degree) |>
+  summarize(academic_degree_count = sum(n))
 ```
 
 -   Example of function formatting
@@ -401,7 +434,12 @@ The following assignments satisfy the above criteria:
 
 ```{r}
 #| label: r-3-example
-
+# Lab 3 question 9
+teacher_evals_clean |>
+  group_by(teacher_id, course_id) |>
+  summarize(number_questions = n_distinct(question_no)) |>
+  filter(number_questions == 9) |>
+  nrow()
 ```
 
 -   Example (function stops)
@@ -450,13 +488,13 @@ group_by(Region, study_year) |>
 
 ```{r}
 #| label: dvs-2-num-cat
-# Lab 2 Question 17
+# Lab 2 Question 17 Revised
 blue_scheme<-c('#4682B4','#4A7E84')
 ggplot(data = surveys,
-       mapping = aes(x = weight, y = species, color = sex,))+
+       mapping = aes(x = weight, y = species, color = sex))+
   geom_boxplot(outliers = FALSE) + 
   scale_color_manual(values = blue_scheme) + 
-  geom_jitter(color = '#FA807220') +
+  geom_jitter(color = '#FA807220', alpha = 0.2) +
   labs(x = 'Weight(g)',
        y = 'Species Type',
        title = 'How Does Weight Differ Among Species of Rodents?',
@@ -472,14 +510,79 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-2-cat
+# Lab 4 Question 7
+match_colors = colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(10)
 
+ca_childcare |>
+  select(Region, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  pivot_longer(
+    cols = mc_infant:mc_preschool,
+    names_to = "Ages",
+    values_to = "Weekly_Median") |>
+  mutate(Ages = recode(Ages,
+        mc_infant = "Infant",
+        mc_toddler = "Toddler",
+        mc_preschool = "Preschool"),
+        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+  ggplot(mapping = aes(x = study_year,
+                       y = Weekly_Median,
+                       color = Region)) +
+           geom_point() +
+           geom_smooth() +
+           facet_wrap(~Ages) +
+  scale_color_manual(values = match_colors) +
+  theme_bw() +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(size = 10, face = 'bold')) +
+  labs(x = 'Study Year',
+       y = '',
+       title = 'Weekly Median Price for Center-Based Childcare ($)',
+       color = 'California Region') +
+  scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
+                     labels = c(2008, 2010, 2012, 2014, 2016, 2018))
 ```
 
 -   Dates (time series plot)
 
 ```{r}
 #| label: dvs-2-date
+# Lab 4 Question 7
+match_colors = colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(10)
 
+ca_childcare |>
+  select(Region, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  pivot_longer(
+    cols = mc_infant:mc_preschool,
+    names_to = "Ages",
+    values_to = "Weekly_Median") |>
+  mutate(Ages = recode(Ages,
+        mc_infant = "Infant",
+        mc_toddler = "Toddler",
+        mc_preschool = "Preschool"),
+        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+  ggplot(mapping = aes(x = study_year,
+                       y = Weekly_Median,
+                       color = Region)) +
+           geom_point() +
+           geom_smooth() +
+           facet_wrap(~Ages) +
+  scale_color_manual(values = match_colors) +
+  theme_bw() +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(size = 10, face = 'bold')) +
+  labs(x = 'Study Year',
+       y = '',
+       title = 'Weekly Median Price for Center-Based Childcare (USD)',
+       color = 'California Region') +
+  scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
+                     labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
+  scale_y_continuous(labels = scales::label_dollar())
 ```
 
 **DVS-2: I use plot modifications to make my visualization clear to the reader.**
@@ -488,35 +591,173 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-2-ex-1
+# Lab 4 Question 7
+match_colors = colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(10)
 
+ca_childcare |>
+  select(Region, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  pivot_longer(
+    cols = mc_infant:mc_preschool,
+    names_to = "Ages",
+    values_to = "Weekly_Median") |>
+  mutate(Ages = recode(Ages,
+        mc_infant = "Infant",
+        mc_toddler = "Toddler",
+        mc_preschool = "Preschool"),
+        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+  ggplot(mapping = aes(x = study_year,
+                       y = Weekly_Median,
+                       color = Region)) +
+           geom_point() +
+           geom_smooth() +
+           facet_wrap(~Ages) +
+  scale_color_manual(values = match_colors) +
+  theme_bw() +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(size = 10, face = 'bold')) +
+  labs(x = 'Study Year',
+       y = '',
+       title = 'Weekly Median Price for Center-Based Childcare (USD)',
+       color = 'California Region') +
+  scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
+                     labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
+  scale_y_continuous(labels = scales::label_dollar())
 ```
 
 -   I can modify my colors to be accessible to anyone's eyes
 
 ```{r}
 #| label: dvs-2-ex-2
-
+#Challenge 4 Graph Revised
+ca_childcare |>
+group_by(Region, study_year) |>
+  summarize(Overall_avg_Family_Cost = (mean(mfcc_infant) +
+                               mean(mfcc_toddler) +
+                               mean(mfcc_preschool)) / 3,
+    Overall_avg_Center_Cost = (mean(mc_infant) +
+                               mean(mc_toddler) +
+                               mean(mc_preschool)) / 3,
+    .groups = "drop") |>
+  ggplot(mapping = aes(x = Overall_avg_Family_Cost,
+                       y = Overall_avg_Center_Cost,
+                       color = Region)) +
+  geom_point(alpha = 0.7) +
+  facet_wrap(~ study_year) +
+  labs(
+  title = 'As Household Income Increases, Center-Based Infant Care Becomes More Expensive',
+  subtitle = 'Average weekly costs (children aged 0–54 months) by region and study year',
+  x = 'Average Weekly Family Childcare Cost',
+  y = 'Average Weekly Center-Based Childcare Cost',
+  color = "California Region") +
+  theme_bw() +
+  scale_color_brewer(palette = 'Set3') +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  scale_x_continuous(labels = scales::label_dollar())
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
 
 ```{r}
 #| label: dvs-2-ex-3
-
+# Lab 2 Question 17 Revised
+blue_scheme<-c('#4682B4','#4A7E84')
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = species, color = sex))+
+  geom_boxplot(outliers = FALSE) + 
+  scale_color_manual(values = blue_scheme) + 
+  geom_jitter(color = '#FA807220', alpha = 0.2) +
+  labs(x = 'Weight(g)',
+       y = 'Species Type',
+       title = 'How Does Weight Differ Among Species of Rodents?',
+       subtitle = "Separated by <span style='color:#4682B4;'>Female</span> and <span style='color:#4A7E84;'>Male</span>") +
+  theme(axis.text.y = element_text(size = 12),
+        panel.background = element_rect(fill = 'lightgrey'),
+        panel.border = element_rect(color = '#FA8072', size = 2),
+        legend.position = 'none',
+        plot.subtitle = element_markdown())
 ```
 
 -   I can modify the text in my plot to be more readable
 
 ```{r}
 #| label: dvs-2-ex-4
+# Lab 4 Question 7
+match_colors = colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(10)
 
+ca_childcare |>
+  select(Region, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  pivot_longer(
+    cols = mc_infant:mc_preschool,
+    names_to = "Ages",
+    values_to = "Weekly_Median") |>
+  mutate(Ages = recode(Ages,
+        mc_infant = "Infant",
+        mc_toddler = "Toddler",
+        mc_preschool = "Preschool"),
+        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+  ggplot(mapping = aes(x = study_year,
+                       y = Weekly_Median,
+                       color = Region)) +
+           geom_point() +
+           geom_smooth() +
+           facet_wrap(~Ages) +
+  scale_color_manual(values = match_colors) +
+  theme_bw() +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(size = 10, face = 'bold')) +
+  labs(x = 'Study Year',
+       y = '',
+       title = 'Weekly Median Price for Center-Based Childcare (USD)',
+       color = 'California Region') +
+  scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
+                     labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
+  scale_y_continuous(labels = scales::label_dollar())
 ```
 
 -   I can reorder my legend to align with the colors in my plot
 
 ```{r}
 #| label: dvs-2-ex-5
+# Lab 4 Question 7
+match_colors = colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(10)
 
+ca_childcare |>
+  select(Region, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  pivot_longer(
+    cols = mc_infant:mc_preschool,
+    names_to = "Ages",
+    values_to = "Weekly_Median") |>
+  mutate(Ages = recode(Ages,
+        mc_infant = "Infant",
+        mc_toddler = "Toddler",
+        mc_preschool = "Preschool"),
+        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+  ggplot(mapping = aes(x = study_year,
+                       y = Weekly_Median,
+                       color = Region)) +
+           geom_point() +
+           geom_smooth() +
+           facet_wrap(~Ages) +
+  scale_color_manual(values = match_colors) +
+  theme_bw() +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(size = 10, face = 'bold')) +
+  labs(x = 'Study Year',
+       y = '',
+       title = 'Weekly Median Price for Center-Based Childcare (USD)',
+       color = 'California Region') +
+  scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
+                     labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
+  scale_y_continuous(labels = scales::label_dollar())
 ```
 
 **DVS-3: I show creativity in my visualizations**
@@ -525,14 +766,62 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-3-1-ex-1
+# Lab 4 Question 7
+match_colors = colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(10)
 
+ca_childcare |>
+  select(Region, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  pivot_longer(
+    cols = mc_infant:mc_preschool,
+    names_to = "Ages",
+    values_to = "Weekly_Median") |>
+  mutate(Ages = recode(Ages,
+        mc_infant = "Infant",
+        mc_toddler = "Toddler",
+        mc_preschool = "Preschool"),
+        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+  ggplot(mapping = aes(x = study_year,
+                       y = Weekly_Median,
+                       color = Region)) +
+           geom_point() +
+           geom_smooth() +
+           facet_wrap(~Ages) +
+  scale_color_manual(values = match_colors) +
+  theme_bw() +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(size = 10, face = 'bold')) +
+  labs(x = 'Study Year',
+       y = '',
+       title = 'Weekly Median Price for Center-Based Childcare (USD)',
+       color = 'California Region') +
+  scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
+                     labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
+  scale_y_continuous(labels = scales::label_dollar())
 ```
 
 -   I can use non-standard colors (Example 2)
 
 ```{r}
 #| label: dvs-3-1-ex-2
-
+# Lab 2 Question 17 Revised
+blue_scheme<-c('#4682B4','#4A7E84')
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = species, color = sex))+
+  geom_boxplot(outliers = FALSE) + 
+  scale_color_manual(values = blue_scheme) + 
+  geom_jitter(color = '#FA807220', alpha = 0.2) +
+  labs(x = 'Weight(g)',
+       y = 'Species Type',
+       title = 'How Does Weight Differ Among Species of Rodents?',
+       subtitle = "Separated by <span style='color:#4682B4;'>Female</span> and <span style='color:#4A7E84;'>Male</span>") +
+  theme(axis.text.y = element_text(size = 12),
+        panel.background = element_rect(fill = 'lightgrey'),
+        panel.border = element_rect(color = '#FA8072', size = 2),
+        legend.position = 'none',
+        plot.subtitle = element_markdown())
 ```
 
 -   I can use annotations (e.g., `geom_text()`)
