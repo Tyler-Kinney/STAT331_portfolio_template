@@ -419,14 +419,53 @@ The following assignments satisfy the above criteria:
 
 ```{r}
 #| label: dvs-1-num
-
+#Challenge 4 Graph Revised
+ca_childcare |>
+group_by(Region, study_year) |>
+  summarize(Overall_avg_Family_Cost = (mean(mfcc_infant) +
+                               mean(mfcc_toddler) +
+                               mean(mfcc_preschool)) / 3,
+    Overall_avg_Center_Cost = (mean(mc_infant) +
+                               mean(mc_toddler) +
+                               mean(mc_preschool)) / 3,
+    .groups = "drop") |>
+  ggplot(mapping = aes(x = Overall_avg_Family_Cost,
+                       y = Overall_avg_Center_Cost,
+                       color = Region)) +
+  geom_point(alpha = 0.7) +
+  facet_wrap(~ study_year) +
+  labs(
+  title = 'As Household Income Increases, Center-Based Infant Care Becomes More Expensive',
+  subtitle = 'Average weekly costs (children aged 0–54 months) by region and study year',
+  x = 'Average Weekly Family Childcare Cost',
+  y = 'Average Weekly Center-Based Childcare Cost',
+  color = "California Region") +
+  theme_bw() +
+  scale_color_brewer(palette = 'Set3') +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  scale_x_continuous(labels = scales::label_dollar())
 ```
 
 -   At least one numeric variable and one categorical variable
 
 ```{r}
 #| label: dvs-2-num-cat
-
+# Lab 2 Question 17
+blue_scheme<-c('#4682B4','#4A7E84')
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = species, color = sex,))+
+  geom_boxplot(outliers = FALSE) + 
+  scale_color_manual(values = blue_scheme) + 
+  geom_jitter(color = '#FA807220') +
+  labs(x = 'Weight(g)',
+       y = 'Species Type',
+       title = 'How Does Weight Differ Among Species of Rodents?',
+       subtitle = "Separated by <span style='color:#4682B4;'>Female</span> and <span style='color:#4A7E84;'>Male</span>") +
+  theme(axis.text.y = element_text(size = 12),
+        panel.background = element_rect(fill = 'lightgrey'),
+        panel.border = element_rect(color = '#FA8072', size = 2),
+        legend.position = 'none',
+        plot.subtitle = element_markdown())
 ```
 
 -   At least two categorical variables
