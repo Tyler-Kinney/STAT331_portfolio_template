@@ -120,7 +120,7 @@ model_components <- tidy(linear_model_lm,
      conf.int = T,
      conf.level = 0.95) |>
   filter(term == 'x') |>
-  select(estimate, starts_with('conf'))
+  select(estimate, starts_wtih('conf'))
 ```
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -332,6 +332,29 @@ ca_childcare |>
 
 ```{r}
 #| label: wd-4-string
+# Lab 8 Question 3
+density_plot_func <- function(df, quant_var, cat_var){
+  x_lab = str_to_title(
+    str_replace_all(string = rlang::englue('{{quant_var}}'),
+                    pattern = '_',
+                    replacement = ' '))
+  by_lab = str_to_title(
+    str_replace_all(string = rlang::englue('{{cat_var}}'),
+                    pattern = '_',
+                    replacement = ' '))
+  title_lab = rlang::englue('Density Plot of {x_lab} separated by {by_lab}')
+  
+  df |>
+    ggplot(mapping = aes(x = {{quant_var}},
+                         fill = {{cat_var}})) +
+    geom_density(alpha = 0.5,
+                 na.rm = TRUE) +
+    labs(x = x_lab,
+         y = 'Density',
+         title = title_lab,
+         fill = by_lab)
+}
+
 
 ```
 
@@ -429,7 +452,24 @@ witness_testimonies_follow_up <- drivers_license |>
 
 ```{r}
 #| label: wd-6-semi
+# Lab 5 Following up on testimonies
+# Revised to use semi join to filter data
+follow_up_witness_1 <- get_fit_now_member |>
+  filter(str_detect(id, '^48Z'),
+         membership_status == 'gold')
 
+follow_up_witness_2 <- get_fit_now_check_in |>
+  mutate(check_in_date = ymd(check_in_date)) |>
+  filter(check_in_date == '2018/01/09') |>
+  semi_join(follow_up_witness_1, by = join_by(membership_id == id)) |>
+  left_join(follow_up_witness_1, by = join_by(membership_id == id)) |>
+  left_join(person, by = join_by(person_id == id))
+  
+witness_testimonies_follow_up <- drivers_license |>
+  filter(str_detect(plate_number, 'H42W')) |>
+  semi_join(follow_up_witness_2, join_by(id == license_id))
+
+witness_testimonies_follow_up
 ```
 
 -   `anti_join()`
@@ -485,7 +525,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   `pivot_wider()`
@@ -736,7 +776,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 **DVS-2: I use plot modifications to make my visualization clear to the reader.**
@@ -980,7 +1020,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   I can use non-standard colors (Example 2)
@@ -1270,16 +1310,46 @@ missing_vals_per_var |>
 
 ```{r}
 #| label: dvs-7-ex-2
-# Lab 4 Question 5
-ca_childcare |>
-  filter(study_year %in% c(2008, 2018)) |>
-  group_by(Region, study_year) |>
-  summarize(median_income = median(mhi_2018),
-            .groups = "drop") |>
-  pivot_wider(names_from = study_year,
-              values_from = median_income,
-              names_prefix = "Median income from ") |>
-  arrange(desc(`Median income from 2018`))
+# Lab 9 Question 6
+evals |>
+    distinct(teacher_id,
+           .keep_all = TRUE) |>
+    mutate('Academic Degree' = fct_recode(academic_degree,
+             'No Degree' = 'no_dgr',
+             'Masters' = 'ma',
+             'Doctorate' = 'dr',
+             'Tenured Professor' = 'prof'),
+         'Seniority' =  case_when(
+              seniority <= 4 ~ 'Junior',
+              seniority >= 5 & seniority <= 8 ~ 'Senior',
+              seniority >= 9 ~ 'Very Senior'),
+         'Sex' = fct_recode(sex,
+              'Male' = 'male',
+              'Female' = 'female')
+         ) |>
+    select(-c(matches('^[[:lower:]]', ignore.case = F), starts_with('SET'))) |>
+    pivot_longer(everything(),
+               names_to = 'variable',
+               values_to = 'level') |>
+    count(variable, level) |>
+    group_by(variable) |>
+    mutate(prop = n/sum(n)) |>
+    ungroup() |>
+    gt(rowname_col = 'level',
+       groupname_col = 'variable') |>
+    cols_label(variable = md('**Demographic**'),
+               level = md('**Group**'),
+               n = md('**Count**'),
+               prop = md('**%**')) |>
+    tab_header(
+    title = 'Demographics of Professors',
+    subtitle = 'Student Evaluations at the University of Poland, Warsaw in 2020') |>
+    tab_spanner(label = md('**Professors**'),
+                columns = c(n, prop)) |>
+    fmt_percent(columns = prop,
+                decimals = 2) |>
+    tab_options(row_group.background.color = 'grey',
+                row_group.font.weight = 'bold')
 ```
 
 ## Program Efficiency
