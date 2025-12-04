@@ -174,11 +174,10 @@ crime_scene_report |>
 
 ```{r}
 #| label: wd-3-string
-# PA 5.1 Questions 1,2,3
-message_data |>
-filter(str_detect(Word, pattern = "^(m|M)"),
-       str_detect(Word, pattern = "(z|Z)$"),
-       str_detect(Word, pattern = "[:punct:]"))
+# Lab 5 finding Witnesses
+witness_2 <- person |>
+  filter(str_detect(name, "^Annabel" ), 
+         address_street_name == 'Franklin Ave')
 
 ```
 
@@ -186,11 +185,13 @@ filter(str_detect(Word, pattern = "^(m|M)"),
 
 ```{r}
 #| label: wd-3-date
-# PA 5.2 question 3 Revised
-# Revised to include a negative filter, to better correspond with the given instructions
-suspect <- suspect |>
-  filter(!wday(Time.Spotted, label = TRUE, abbr = FALSE) %in% c("Tuesday", "Thursday"))
-glimpse(suspect)
+# Lab 5 Following Up on Testimonies
+follow_up_witness_2 <- get_fit_now_check_in |>
+  mutate(check_in_date = ymd(check_in_date)) |>
+  filter(check_in_date == '2018/01/09',
+         membership_id %in% follow_up_witness_1$id)|>
+  left_join(follow_up_witness_1, by = join_by(membership_id == id)) |>
+  left_join(person, by = c("name" = "name"))
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -199,14 +200,33 @@ glimpse(suspect)
 
 ```{r}
 #| label: wd-4-numeric-ex-1
-# 
+# Challenge 3 Question 1
+Teacher_eval_chal <- Teacher_Eval |>
+  filter(question_no == 903) |>
+  mutate(SET_level =
+        if_else(SET_score_avg >= 4,
+                'excellent',
+                'standard'),
+        sen_level =
+        case_when(
+          seniority <= 4 ~ 'junior',
+          seniority >= 5 & seniority <= 8 ~ 'senior',
+          seniority >= 9 ~ 'very senior')) |>
+  select(course_id, SET_level, sen_level)
 ```
 
 -   Numeric Example 2
 
 ```{r}
 #| label: wd-4-numeric-ex-2
-
+# Lab 7 Question 7
+Fish_data |>
+  mutate(length_scaled = rescale_01(length)) |>
+  ggplot(aes(x = length_scaled)) +
+  geom_histogram(binwidth = 45 / (max(Fish_data$length) -
+                         min(Fish_data$length))) +
+  labs(x = 'Scaled values of Fish Length') +
+  scale_y_continuous(limits = c(0,4000))
 ```
 
 -   Factor Example 1 (renaming levels)
@@ -229,12 +249,14 @@ ca_childcare |>
     cols = mc_infant:mc_preschool,
     names_to = "Ages",
     values_to = "Weekly_Median") |>
-  mutate(Ages = recode(Ages,
-        mc_infant = "Infant",
-        mc_toddler = "Toddler",
-        mc_preschool = "Preschool"),
-        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
-        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+    mutate(Ages = fct_recode(Ages,
+                  "Infant"    = "mc_infant",
+                  "Toddler"   = "mc_toddler",
+                  "Preschool" = "mc_preschool"),
+            Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+            Region = fct_reorder2(Region,
+                                  study_year,
+                                  Weekly_Median))|>
   ggplot(mapping = aes(x = study_year,
                        y = Weekly_Median,
                        color = Region)) +
@@ -253,7 +275,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   Factor Example 2 (reordering levels)
@@ -277,12 +299,14 @@ ca_childcare |>
     cols = mc_infant:mc_preschool,
     names_to = "Ages",
     values_to = "Weekly_Median") |>
-  mutate(Ages = recode(Ages,
-        mc_infant = "Infant",
-        mc_toddler = "Toddler",
-        mc_preschool = "Preschool"),
-        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
-        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
+  mutate(Ages = fct_recode(Ages,
+                "Infant"    = "mc_infant",
+                "Toddler"   = "mc_toddler",
+                "Preschool" = "mc_preschool"),
+          Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
+          Region = fct_reorder2(Region,
+                                study_year,
+                                Weekly_Median))|>
   ggplot(mapping = aes(x = study_year,
                        y = Weekly_Median,
                        color = Region)) +
@@ -301,7 +325,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   Character (example must use functions from **stringr**)
@@ -347,7 +371,11 @@ follow_up_witness_2 <- get_fit_now_check_in |>
 
 ```{r}
 #| label: wd-5-right
-
+# Lab 4 Question 2
+ca_childcare <- childcare_costs |>
+  right_join(y = counties,
+            by = join_by(county_fips_code == county_fips_code)) |>
+  filter(state_abbreviation == 'CA')
 ```
 
 -   `left_join()` **or** `right_join()` Example 2
@@ -517,8 +545,8 @@ group_by(Region, study_year) |>
   color = "California Region") +
   theme_bw() +
   scale_color_brewer(palette = 'Set3') +
-  scale_y_continuous(labels = scales::label_dollar()) +
-  scale_x_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$')) +
+  scale_x_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   Example of **dplyr** pipeline
@@ -541,7 +569,16 @@ teacher_evals_clean |>
 
 ```{r}
 #| label: r-2-3
-
+# Lab 7 Question 5
+rescale_01 <- function(x){
+  if(is.numeric(x) & length(x) > 1){
+    (x - min(x, na.rm = TRUE)) / 
+           (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+    }
+  else{
+    stop('Error: input is non-numeric or input vecotr is not greater than 1')
+  }
+}
 ```
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
@@ -562,7 +599,7 @@ teacher_evals_clean |>
 
 ```{r}
 #| label: r-3-function-stops
-# Lab 7 question 4
+# Lab 7 question 5
 rescale_01 <- function(x){
   if(is.numeric(x) & length(x) > 1){
     (x - min(x, na.rm = TRUE)) / 
@@ -607,8 +644,8 @@ group_by(Region, study_year) |>
   color = "California Region") +
   theme_bw() +
   scale_color_brewer(palette = 'Set3') +
-  scale_y_continuous(labels = scales::label_dollar()) +
-  scale_x_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$')) +
+  scale_x_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   At least one numeric variable and one categorical variable
@@ -639,47 +676,20 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-2-cat
-# Lab 4 Question 7 Revised
-# Feedback: Can you get your facet labels to be the same as mine? Can you reorder the facets so they go in the same order as mine?
-
-#Can you reorder the colors in the legend so they appear in the same order as the lines in the plot? I am specifically looking for a tool that does the reordering for you since doing the reordering by hand is not a robust programming practice!
-
-#I like your colors! Can you find which ones I used?
-
-# Revision: Reordered factors, added brewer.pal to match the colors
-match_colors = colorRampPalette(RColorBrewer::brewer.pal(8, "Accent"))(10)
-
-ca_childcare |>
-  select(Region, study_year, mc_infant, mc_toddler, mc_preschool) |>
-  pivot_longer(
-    cols = mc_infant:mc_preschool,
-    names_to = "Ages",
-    values_to = "Weekly_Median") |>
-  mutate(Ages = recode(Ages,
-        mc_infant = "Infant",
-        mc_toddler = "Toddler",
-        mc_preschool = "Preschool"),
-        Ages = factor(Ages, levels = c("Infant", "Toddler", "Preschool")),
-        Region = fct_reorder2(Region, study_year, Weekly_Median))|>
-  ggplot(mapping = aes(x = study_year,
-                       y = Weekly_Median,
-                       color = Region)) +
-           geom_point() +
-           geom_smooth() +
-           facet_wrap(~Ages) +
-  scale_color_manual(values = match_colors) +
-  theme_bw() +
-  theme(aspect.ratio = 1,
-        axis.text.x = element_text(size = 7),
-        axis.text.y = element_text(size = 7),
-        plot.title = element_text(size = 10, face = 'bold')) +
-  labs(x = 'Study Year',
+# Challenge 3 Question 2
+ggplot(data = Teacher_eval_chal,
+       mapping = aes(x = sen_level,
+                     fill = SET_level)) +
+  geom_bar(position = 'fill') +
+  scale_fill_manual(values = c('plum3',
+                               'tan'),
+                    name = 'Evaluation Rating') +
+  labs(x = 'Years of Experience',
        y = '',
-       title = 'Weekly Median Price for Center-Based Childcare (USD)',
-       color = 'California Region') +
-  scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
-                     labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+       title = "Evaluation of Teachers' Use of Activities") +
+  theme_bw() +
+  theme(legend.position = 'top') +
+  scale_y_continuous(labels = scales::label_percent())
 ```
 
 -   Dates (time series plot)
@@ -775,40 +785,35 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   I can modify my colors to be accessible to anyone's eyes
 
 ```{r}
 #| label: dvs-2-ex-2
-# Challenge 4 Graph Revised
-# Feedback: Progressing DVS-2, and Statisfactory DVS-3
-# Revision: Found a non-standard color palette I like, added dollar sign labels, added some alpha to my points for easier viewing
-ca_childcare |>
-group_by(Region, study_year) |>
-  summarize(Overall_avg_Family_Cost = (mean(mfcc_infant) +
-                               mean(mfcc_toddler) +
-                               mean(mfcc_preschool)) / 3,
-    Overall_avg_Center_Cost = (mean(mc_infant) +
-                               mean(mc_toddler) +
-                               mean(mc_preschool)) / 3,
-    .groups = "drop") |>
-  ggplot(mapping = aes(x = Overall_avg_Family_Cost,
-                       y = Overall_avg_Center_Cost,
-                       color = Region)) +
-  geom_point(alpha = 0.7) +
-  facet_wrap(~ study_year) +
-  labs(
-  title = 'As Household Income Increases, Center-Based Infant Care Becomes More Expensive',
-  subtitle = 'Average weekly costs (children aged 0–54 months) by region and study year',
-  x = 'Average Weekly Family Childcare Cost',
-  y = 'Average Weekly Center-Based Childcare Cost',
-  color = "California Region") +
-  theme_bw() +
-  scale_color_brewer(palette = 'Set3') +
-  scale_y_continuous(labels = scales::label_dollar()) +
-  scale_x_continuous(labels = scales::label_dollar())
+# Lab 10 Question 13
+# Colors Were chosen using this website (https://davidmathlogic.com/colorblind/#%23D81B60-%231E88E5-%23FFC107-%23004D40) this website allows me to see how others will see my color palettes and the one I chose seems to mesh well for most types of color blindness
+plot_data <- bind_rows(map(1:100, ~ mycifun(3, 0.5, 100))) |>
+  mutate(id = row_number())
+
+plot_data |>
+  ggplot(mapping = aes(x = as.factor(id),
+                       color = as.factor(cover))) +
+  geom_errorbar(aes(ymin = conf.low,
+                    ymax = conf.high)) +
+  scale_color_manual(values = c('#BE5B50', '#D4CF9B')) +
+  geom_hline(yintercept = 0.5,
+             color = '#5B7F9E') +
+  labs(x = '',
+       y = 'Slope Estimate',
+       title = '95% Confidence Intervals of Estimated Slopes',
+       subtitle = "Confidence Intervals That <span style='color:#D4CF9B;'>Include</span> and <span style='color:#BE5B50;'>Exclude</span> the <span style='color:#5B7F9E;'>True Slope</span>") +
+  theme_light() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = 'None',
+        plot.subtitle = element_markdown())
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
@@ -879,7 +884,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 -   I can reorder my legend to align with the colors in my plot
@@ -926,7 +931,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 **DVS-3: I show creativity in my visualizations**
@@ -1006,14 +1011,66 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-3-2
+# Lab 10 Question 13 Revised
+# Revision: Include geom_text to incorporate the true slope
+plot_data <- bind_rows(map(1:100, ~ mycifun(3, 0.5, 100))) |>
+  mutate(id = row_number())
 
+plot_data |>
+  ggplot(mapping = aes(x = as.factor(id),
+                       color = as.factor(cover))) +
+  geom_errorbar(aes(ymin = conf.low,
+                    ymax = conf.high)) +
+  scale_color_manual(values = c('#BE5B50', '#D4CF9B')) +
+  geom_hline(yintercept = 0.5,
+             color = '#5B7F9E') +
+  geom_text(aes(x = 8,
+                y = max(conf.high) + 0.1,
+                label = "True Slope = 0.5"),
+            color = "#5B7F9E",
+            size = 3,
+            fontface = "bold") +
+  labs(x = '',
+       y = 'Slope Estimate',
+       title = '95% Confidence Intervals of Estimated Slopes',
+       subtitle = "Confidence Intervals That <span style='color:#D4CF9B;'>Include</span> and <span style='color:#BE5B50;'>Exclude</span> the <span style='color:#5B7F9E;'>True Slope</span>") +
+  theme_light() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = 'None',
+        plot.subtitle = element_markdown())
 ```
 
 -   I can choose creative geometries (e.g., `geom_segment()`, `geom_ribbon)()`)
 
 ```{r}
 #| label: dvs-3-3
-
+# Lab 7 Question 3
+Missing_values_by_year_trip_section <- Fish_data |>
+  group_by(year, trip, section) |>
+  summarize(across(where(is.numeric), Count_missing_vals)) |>
+  mutate(Missing_values = rowSums(across(where(is.numeric)))) |>
+  select(year, trip, section, Missing_values)
+  
+Missing_values_by_year_trip_section |>
+  ggplot(mapping = aes(x = year)) +
+  geom_ribbon(aes(ymin = 0, ymax = Missing_values),
+              fill = "#FA8072",
+              alpha = 0.6) +
+  geom_line(aes(y = Missing_values),
+            color = "#FA5067",
+            linewidth = 0.8) +
+  geom_smooth(aes(y = Missing_values),
+              color = "#800000",
+              method = 'lm',
+              se = FALSE) +
+  labs( title = "<span style='color:#FA8072;'>Number of Missing Values</span> by Year",
+        subtitle = "Each Panel Shows Total Missing Observations by Trip and Section",
+        y = "Missing Values",
+        x = "Year") +
+  facet_grid(trip ~ section) +
+  theme_light() +
+  theme(plot.title = element_markdown())
 ```
 
 **DVS-4: I can calculate numerical summaries of variables.**
@@ -1022,22 +1079,62 @@ ggplot(data = surveys,
 
 ```{r}
 #| label: dvs-4-summarize
-#Lab 3 Question 10
-teacher_evals_clean |>
-  filter(question_no == 901) |>
-  group_by(teacher_id) |>
-  summarize(num_courses = n_distinct(course_id),
-            avg_score_Q1 = mean(SET_score_avg)) |>
-  filter(num_courses >= 5) |>
-  arrange(avg_score_Q1) |>
-  slice(-(2:46))
+# Lab 7 Question 1
+# Summarizes the amount of missing values for each variable and how many rows have missing values
+Count_missing_vals <- function(x){
+  sum(is.na(x))
+}
+
+missing_vals_per_var <- Fish_data |>
+  summarize(across(everything(), Count_missing_vals)) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "Missing_Values")
+
+rows_with_missing_values <- Fish_data |>
+  mutate(any_na = if_any(everything(), is.na)) |>
+  summarize(
+    Variable = "Rows with Missing Values",
+    Missing_Values = sum(any_na))
+
+  Missing_values_table <-
+    bind_rows(missing_vals_per_var, rows_with_missing_values)
+  
+  Missing_values_table
 ```
 
 -   Example using `across()`
 
 ```{r}
 #| label: dvs-4-across
-
+# Lab 7 Question 3
+# computes missing value counts for each numeric variable within each year-trip-section group
+Missing_values_by_year_trip_section <- Fish_data |>
+  group_by(year, trip, section) |>
+  summarize(across(where(is.numeric), Count_missing_vals)) |>
+  mutate(Missing_values = rowSums(across(where(is.numeric)))) |>
+  select(year, trip, section, Missing_values)
+  
+Missing_values_by_year_trip_section |>
+  ggplot(mapping = aes(x = year)) +
+  geom_ribbon(aes(ymin = 0, ymax = Missing_values),
+              fill = "#FA8072",
+              alpha = 0.6) +
+  geom_line(aes(y = Missing_values),
+            color = "#FA5067",
+            linewidth = 0.8) +
+  geom_smooth(aes(y = Missing_values),
+              color = "#800000",
+              method = 'lm',
+              se = FALSE) +
+  labs( title = "<span style='color:#FA8072;'>Number of Missing Values</span> by Year",
+        subtitle = "Each Panel Shows Total Missing Observations by Trip and Section",
+        y = "Missing Values",
+        x = "Year") +
+  facet_grid(trip ~ section) +
+  theme_light() +
+  theme(plot.title = element_markdown())
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
@@ -1092,7 +1189,46 @@ ca_childcare |>
 
 ```{r}
 #| label: dvs-6-ex-2
-
+# Lab 9 Question 6
+evals |>
+    distinct(teacher_id,
+           .keep_all = TRUE) |>
+    mutate('Academic Degree' = fct_recode(academic_degree,
+             'No Degree' = 'no_dgr',
+             'Masters' = 'ma',
+             'Doctorate' = 'dr',
+             'Tenured Professor' = 'prof'),
+         'Seniority' =  case_when(
+              seniority <= 4 ~ 'Junior',
+              seniority >= 5 & seniority <= 8 ~ 'Senior',
+              seniority >= 9 ~ 'Very Senior'),
+         'Sex' = fct_recode(sex,
+              'Male' = 'male',
+              'Female' = 'female')
+         ) |>
+    select(-c(matches('^[[:lower:]]', ignore.case = F), starts_with('SET'))) |>
+    pivot_longer(everything(),
+               names_to = 'variable',
+               values_to = 'level') |>
+    count(variable, level) |>
+    group_by(variable) |>
+    mutate(prop = n/sum(n)) |>
+    ungroup() |>
+    gt(rowname_col = 'level',
+       groupname_col = 'variable') |>
+    cols_label(variable = md('**Demographic**'),
+               level = md('**Group**'),
+               n = md('**Count**'),
+               prop = md('**%**')) |>
+    tab_header(
+    title = 'Demographics of Professors',
+    subtitle = 'Student Evaluations at the University of Poland, Warsaw in 2020') |>
+    tab_spanner(label = md('**Professors**'),
+                columns = c(n, prop)) |>
+    fmt_percent(columns = prop,
+                decimals = 2) |>
+    tab_options(row_group.background.color = 'grey',
+                row_group.font.weight = 'bold')
 ```
 
 -   I can arrange my table to have an intuitive ordering
@@ -1117,6 +1253,17 @@ ca_childcare |>
 
 ```{r}
 #| label: dvs-7-ex-1
+# lab 9 Question 8 
+missing_vals_per_var |>
+  arrange(`Missing Values`) |>
+  gt() |>
+  data_color(columns = `Missing Values`,
+             colors = c('darkgreen', 'brown1')) |>
+  tab_header(
+    title = 'Number of Missing Values for Fish Measurements',
+    subtitle = 'Data collected from 1989 to 2006 on the Blackfoot Fish River in Montana') |>
+  cols_label(`Missing Values` = md('**Missing Values**'),
+             `Measurement Variable` = md('**Measurement Variable**'))
 ```
 
 -   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`)
@@ -1159,19 +1306,33 @@ crime_scene_report |>
 # Lab 3 Question 5 Revised
 # Revision to include across function to condense code
 teacher_evals_clean <- Teacher_Eval |>
-  filter(no_participants > 9) |>
+  filter(no_participants >= 10) |>
   rename(sex = gender) |>
-  mutate(across(c(teacher_id, course_id), .fns = as.character)) |>
-  select(course_id:SET_score_avg,
+  mutate(across(c(teacher_id, course_id), as.character)) |>
+  select(matches('_id$|no'), 
+         resp_share,
+         SET_score_avg,
          percent_failed_cur,
-         academic_degree:sex)
+         academic_degree,
+         seniority,
+         sex)
 ```
 
 -   using functions from the `map()` family
 
 ```{r}
 #| label: pe-1-map-1
-
+# Lab 9 Question 3
+surveys |>
+  map_chr(.f = ~ class(.x)) |>
+  bind_rows() |>
+  pivot_longer(cols = everything(),
+               names_to = 'Variable',
+               values_to = 'Type') |>
+  arrange(Type) |>
+  gt(caption = 'What Data Type is Each Variable?') |>
+  cols_label(Type = md('**Data Type**'),
+             Variable = md('**Variable**'))
 ```
 
 **PE-2: I can write functions to reduce repetition in my code.**
@@ -1180,13 +1341,44 @@ teacher_evals_clean <- Teacher_Eval |>
 
 ```{r}
 #| label: pe-2-1
-
+# Lab 7 Question 4
+rescale_01 <- function(x){
+  if(is.numeric(x) & length(x) > 1){
+    (x - min(x, na.rm = TRUE)) / 
+           (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+    }
+  else{
+    stop('Error: input is non-numeric or input vecotr is not greater than 1')
+  }
+}
 ```
 
 -   Example 2: Function that operates on data frames
 
 ```{r}
 #| label: pe-2-2
+# Lab 8 Question 3
+density_plot_func <- function(df, quant_var, cat_var){
+  x_lab = str_to_title(
+    str_replace_all(string = rlang::englue('{{quant_var}}'),
+                    pattern = '_',
+                    replacement = ' '))
+  by_lab = str_to_title(
+    str_replace_all(string = rlang::englue('{{cat_var}}'),
+                    pattern = '_',
+                    replacement = ' '))
+  title_lab = rlang::englue('Density Plot of {x_lab} separated by {by_lab}')
+  
+  df |>
+    ggplot(mapping = aes(x = {{quant_var}},
+                         fill = {{cat_var}})) +
+    geom_density(alpha = 0.5,
+                 na.rm = TRUE) +
+    labs(x = x_lab,
+         y = 'Density',
+         title = title_lab,
+         fill = by_lab)
+}
 
 ```
 
@@ -1194,6 +1386,15 @@ teacher_evals_clean <- Teacher_Eval |>
 
 ```{r}
 #| label: pe-2-3
+# Lab 8 Question 2
+pivot_table <- function(df, row, col){
+    df |> 
+    count({{row}}, {{col}}) |>
+    pivot_wider(names_from = {{col}},
+                values_from = n,
+                values_fill = 0) |>
+    janitor::adorn_totals(where = c('row', 'col'))
+}
 
 ```
 
@@ -1218,14 +1419,29 @@ teacher_evals_clean <- Teacher_Eval |>
 
 ```{r}
 #| label: pe-3-map-1
+# Lab 9 Question 4
+evals <- evals |>
+  map_if(.p = is.character, .f = ~ as.factor(.x)) |>
+  bind_cols()
 
 ```
 
--   using a `map()` function with **more than one** input (e.g., `map_2()` or `pmap()`)
+-   another example using a `map()` function with **one** input
 
 ```{r}
 #| label: pe-3-map-2
+# Lab 9 Question 7
+missing_vals_per_var <- fish |>
+  map_int(.f = ~ sum(is.na(.x))) |>
+  enframe(name = 'Measurement Variable', value = 'Missing Values')
 
+rows_with_missing <- fish |>
+  mutate(any_na = if_any(everything(), is.na)) |>
+  summarize(
+    `Measurement Variable` = "observations with missing values",
+    `Missing Values` = sum(any_na))
+
+bind_rows(missing_vals_per_var, rows_with_missing)
 ```
 
 **PE-4: I can use modern tools when carrying out my analysis.**
@@ -1293,7 +1509,7 @@ ca_childcare |>
        color = 'California Region') +
   scale_x_continuous(breaks = c(2008, 2010, 2012, 2014, 2016, 2018),
                      labels = c(2008, 2010, 2012, 2014, 2016, 2018)) +
-  scale_y_continuous(labels = scales::label_dollar())
+  scale_y_continuous(labels = scales::label_currency(prefix = '$'))
 ```
 
 ## Data Simulation & Statisical Models
@@ -1304,14 +1520,61 @@ ca_childcare |>
 
 ```{r}
 #| label: dsm-1-1
+# Lab 10 Question 8 & 10
+mycifun <- function(beta0, beta1, n){
 
+intercept = beta0
+slope = beta1
+
+x = runif(n, min = 0, max = 1)
+
+ep = rnorm(n, 0, 1)
+
+y = intercept + x*slope + ep
+
+lm_data = tibble(x, y)
+
+linear_model_lm = lm(y ~ x,
+                     data = lm_data)
+
+tidy(linear_model_lm,
+     conf.int = T,
+     conf.level = 0.95) |>
+  filter(term == 'x') |>
+  select(estimate, conf.low, conf.high) |>
+  mutate(cover = if_else(condition = slope >= conf.low & slope <= conf.high,
+                         true = 1,
+                         false = 0))
+
+}
+
+ci_dat <- map(.x = 1:1000,
+              .f = ~ mycifun(3, 0.5, 100)
+              )
 ```
 
 -   Example 2
 
 ```{r}
 #| label: dsm-1-2
+# Lab 10 Question 1 & 2
+randomBabies <- function(n_babies){
+  
+  baby_data <- tibble(parent = 1:n_babies,
+    baby = sample(1:n_babies,
+                  size = n_babies,
+                  replace = F))
+  
+  matches <- baby_data |>
+    mutate(match = ifelse(parent == baby, 1, 0)) |>
+    filter(match == 1) |>
+    nrow()
+  
+  matches
+}
 
+results <- map_int(.x = 1:10000,
+                   .f = ~ randomBabies(n_babies = 4))
 ```
 
 **DSSM-2: I can conduct common statistical analyses in R.**
