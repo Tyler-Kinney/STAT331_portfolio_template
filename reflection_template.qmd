@@ -10,7 +10,7 @@ execute:
   echo: true
 ---
 
-[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an A-.
+[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an A.
 
 [**Learning Objective Evidence:**]{.underline} In the code chunks below, provide code from Lab or Challenge assignments where you believe you have demonstrated proficiency with the specified learning target. Be sure to specify **where** the code came from (e.g., Lab 4 Question 2).
 
@@ -120,7 +120,7 @@ model_components <- tidy(linear_model_lm,
      conf.int = T,
      conf.level = 0.95) |>
   filter(term == 'x') |>
-  select(estimate, starts_wtih('conf'))
+  select(estimate, starts_with('conf'))
 ```
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -477,7 +477,7 @@ witness_testimonies_follow_up
 ```{r}
 #| label: wd-6-anti
 # Lab 5 Following up on Shooters Claim
-# Added the bottom chunk of code to answer the question "how many times did people who dont drive a Model S and not around 65-67" and dont have red hair?". 
+# Added the final code chunk to calculate how many times people who do not match the Model S / red hair / 65–67 height description attended the SQL Symphony Concert in December 2017. In order to display I know how to use an anti_join. 
 #| label: follow-up-on-shooters-claim
 possible_car <- drivers_license |>
   filter(car_make == 'Tesla',
@@ -593,6 +593,8 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-2-1
 # Challenge 4 Graph
+
+# dplyr pipe adding columns of importance 
 ca_childcare |>
 group_by(Region, study_year) |>
   summarize(Overall_avg_Family_Cost = (mean(mfcc_infant) +
@@ -602,6 +604,8 @@ group_by(Region, study_year) |>
                                mean(mc_toddler) +
                                mean(mc_preschool)) / 3,
     .groups = "drop") |>
+  
+# ggplot is taking the modified data frame to produce a graph comparing Family Costs to Center Costs over the years
   ggplot(mapping = aes(x = Overall_avg_Family_Cost,
                        y = Overall_avg_Center_Cost,
                        color = Region)) +
@@ -624,15 +628,18 @@ group_by(Region, study_year) |>
 ```{r}
 #| label: r-2-2
 # Lab 3 Question 7
+
 teacher_evals_clean |>
+  # Takes only distinct teach_ids
   distinct(teacher_id, .keep_all = TRUE) |>
-  select(teacher_id,
-         sex,
-         academic_degree,
-         seniority) |>
-  count(sex, academic_degree, seniority) |>
-  group_by(academic_degree) |>
-  summarize(academic_degree_count = sum(n))
+  # Selects useful column
+  select(academic_degree) |>
+  # Creates Column n showing counts for each academic degree
+  count(academic_degree) |>
+  # Creates new column academic_degree_counts, same as n but better name
+  mutate(academic_degree_counts = n) |>
+  # removes column n
+  select(-n)
 ```
 
 -   Example of function formatting
@@ -641,12 +648,15 @@ teacher_evals_clean |>
 #| label: r-2-3
 # Lab 7 Question 5
 rescale_01 <- function(x){
+  # checking if vector x is numeric and is greater than 1
   if(is.numeric(x) & length(x) > 1){
+    # outputs rescaled x
     (x - min(x, na.rm = TRUE)) / 
            (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
     }
+  # if didnt pass check outputs error message
   else{
-    stop('Error: input is non-numeric or input vecotr is not greater than 1')
+    stop('Error: input is non-numeric or input vector is not greater than 1')
   }
 }
 ```
@@ -1707,16 +1717,26 @@ summary(species_mod)
 
 ## Revising My Thinking
 
-I feel that a lot of my revisions throughout the course have less to do with answering the problem but rather how I approach solving the problem. Often times when I first submit labs and challenge I can get the desired result, but my process isn't great. I believe a lot of this has to do with how I am as a person, I'm always tempted to get stuff over with, my brain only focuses on the desired output and not about how I can make the output process cleaner or more robust. My revisions mainly correspond with feedback given on my original submissions of labs and challenges. Most of the revisions I did have to do with displaying data in a nicer fashion, and I believe now after receiving feedback on what to improve on with my graphing skills I feel confident about making better graphs on future assignments.
+Mid-term: I feel that a lot of my revisions throughout the course have less to do with answering the problem but rather how I approach solving the problem. Often times when I first submit labs and challenge I can get the desired result, but my process isn't great. I believe a lot of this has to do with how I am as a person, I'm always tempted to get stuff over with, my brain only focuses on the desired output and not about how I can make the output process cleaner or more robust. My revisions mainly correspond with feedback given on my original submissions of labs and challenges. Most of the revisions I did have to do with displaying data in a nicer fashion, and I believe now after receiving feedback on what to improve on with my graphing skills I feel confident about making better graphs on future assignments.
+
+Final: Extending on what I said in the Mid-term portion, I have since continued to use feedback given to me in the past in order to display data better with graphs and tables. I have also revised how I go about answering questions. I feel in Lab 7-10 I did a better job not only answering the question, but also formatting and other cosmetic details as well.
 
 ## Extending My Thinking
 
-Honestly for me this aligns closely with what I said in the revising my thinking section, I feel that after getting feedback on my code the first few times, I have now realized it is important on how you output your answer and how you get their; The answer is not the only thing that matters. I also feel that my process of graph making has changed. At the beginning of the course I always thought about graph making from a very technical stand point, rather than a fun, creative way to display myself to who ever may be viewing my code. For instance in my challenge 4 graph I wanted to find a color scheme that I found fun and accessible to my viewers so I searched Google for color palettes and found Set3 which I really enjoy. Also before I started this course, I really didn't think about going back to my code to reflect on it. I feel that I didn't do this much before this class, because in CSC 101, the only other coding class I have taken, we weren't given much feedback and if I wasn't getting errors and got the right result, I would do well in the class, which is very different then the project based nature of this class, which aligns better with what I may do in the future.
+Mide-term: Honestly for me this aligns closely with what I said in the revising my thinking section, I feel that after getting feedback on my code the first few times, I have now realized it is important on how you output your answer and how you get their; The answer is not the only thing that matters. I also feel that my process of graph making has changed. At the beginning of the course I always thought about graph making from a very technical stand point, rather than a fun, creative way to display myself to who ever may be viewing my code. For instance in my challenge 4 graph I wanted to find a color scheme that I found fun and accessible to my viewers so I searched Google for color palettes and found Set3 which I really enjoy. Also before I started this course, I really didn't think about going back to my code to reflect on it. I feel that I didn't do this much before this class, because in CSC 101, the only other coding class I have taken, we weren't given much feedback and if I wasn't getting errors and got the right result, I would do well in the class, which is very different then the project based nature of this class, which aligns better with what I may do in the future.
+
+Final: Adding on to my Mid-term part, I feel that my graphs, even since writing the Mid-term part have become more unique and fun but also accessible. For instance the Lab 10 graph showing Confidence Intervals, I really focused on color combinations, I made sure I enjoyed the colors, but also that it was accessible. I have also used non-standard graph types like in Lab 10 I used a lollipop graph to answer question 3, also in Lab 8 I created a function to create density plots, and finally for Lab 7 question 3 I used Geom_smooth. These are things that I probably wouldn't have used before taking this class, given I am more used to Boxplots, Line graphs, Histograms, etc.
 
 ## Peer Support & Collaboration
 
-So far in the course I feel that my peer feedback has been lackluster, though I feel it is getting better every time I give some, so by the time the final portfolio is due, I should have some great feedback to put in here. So far, this is the best feedback I've given, which was to a peer on lab 4:
+Mid_term: So far in the course I feel that my peer feedback has been lackluster, though I feel it is getting better every time I give some, so by the time the final portfolio is due, I should have some great feedback to put in here. So far, this is the best feedback I've given, which was to a peer on lab 4:
 
 Overall I love the code formatting and how detailed you are in your explanation of the datset. Some things I noticed were that you probably didn't need to glimpse() in question 1, because it takes up a lot of space in the html, and doesn't provide a lot of information, also your labels didn't apply to your graph on question 8. I believe overall your answers to the questions are correct. Good Job.
 
 I feel that in the collaborative activities I have done very well. I am willing to play whatever role is assigned to me, and if I am the one typing and the person thinking of the answer asks for my help, I try to point them in the direction I feel is best. When I have the other role, I am always doing what I feel is the best and after I complete a question, I ask my partner if they see a simpler solution, because I am still improving in making clean, short code. I also feel that when I am with my partner when we get really stuck or have a question about or code, we often raise our hand for help. For example in PA 5.2 question 3, we were trying to use a not in type operator, and we couldn't get it to work so we raised our hand for help, and you helped us try to format the idea correctly, but we couldn't get it to work at the time. But after reviewing the code after class, I figured out how to syntax it correctly. That exact code is under WD-3.
+
+Final: I feel the feedback I have been giving has improved Immensely, probably because it is easier for me to spot things to improve now that I am more acquainted with R. Here is an example of one of the recent feedbacks I've given on Lab 8:\
+\
+Overall your code seems to function correctly, but I have a few problems with your functions. Your functions doesn't use syntax from the lectures we have had. In Question 2, you use !!sym() which I don't personally know, it seems to work, but in class we learned about {{}} which, also the question asks you to add row and column totals to the table, which can be done with janitor::adorn_totals(). In Question 3, your code uses a lot of rlang function calls. Personally I was able to use less function calls than you using the rlang::englue() function, I would recommend looking into that function for making dynamic titles, also your !!x_sym calls can be replaced using {{}}. Your code works how it is, but your code could better match objectives in your portfolio by making some small revisions. F.Y.I %\>% has been superseded by \|\> which is what we learned in class.\
+\
+I feel that I am still a good collaborator, I play both roles in the PAs and I love helping my partner answer questions when they need help, sometimes I might butt in a little bit too much, this is because I get a bit anxious when I think I know a solution. Outside of PAs I enjoy helping people who ask me for help on Labs, even if I may not know the answer at the moment, I enjoy working with that person to try and solve their problem.

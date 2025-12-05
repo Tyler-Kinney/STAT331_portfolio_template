@@ -6,16 +6,22 @@ editor: visual
 
 **Answer each of the following questions with *one sentence* including a brief explanation.**
 
-1. Finish the sentence with another student’s name: "If [Name of Student] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
+1.  Finish the sentence with another student’s name: "If \[Name of Student\] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
 
+    Aiden Lui. iIbelieve he deserves an A because he works hard on his labs and he is a good collaborator and he is friendly. He is also willing to help me if I am confused on a topic or lost.
 
-2. What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
+2.  What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
 
+    I found joins to be difficult and stringr. I had never worked with joins so wrapping my brain around it took a long time. For stringr the difficulty came in the syntax, there is so much syntax that is really easy to mess up.
 
-3. What was the easiest part of the class for you? Explain why.
+3.  What was the easiest part of the class for you? Explain why.
 
+    mutating and filtering, I felt that when I mutated or filtered I never truly had difficulty, unless it was using stringr.
 
-4. What part of the class surprised or interested you the most? Explain why.
+4.  What part of the class surprised or interested you the most? Explain why.
 
+    I was surprised by the flipped class style where you worked on labs outside of class, but it was a good surprised as I enjoyed learning the code this way. Most interesting for me was function writing, mostly because the {{}} thing is very different from python which is the only other language I know anything about.
 
-5. Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+5.  Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+
+    If you need help, don't resort to AI, RStudio has a built in help document that is incredibly useful, also you have your peers who are incredibly helpful if you are struggling, and lastly there is your instructor, who can help you during office hours. I feel that AI can help in some regards for syntax fixing, but if it is just solving the problem for you, you will not learn how to use R effectively.
