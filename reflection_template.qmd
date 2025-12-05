@@ -476,7 +476,37 @@ witness_testimonies_follow_up
 
 ```{r}
 #| label: wd-6-anti
+# Lab 5 Following up on Shooters Claim
+# Added the bottom chunk of code to answer the question "how many times did people who dont drive a Model S and not around 65-67" and dont have red hair?". 
+#| label: follow-up-on-shooters-claim
+possible_car <- drivers_license |>
+  filter(car_make == 'Tesla',
+         car_model == 'Model S',
+         hair_color == 'red',
+         between(height, 65, 67))
 
+potential_hirers <- person |>
+  semi_join(possible_car, by = join_by(license_id == id))
+
+  facebook_event_checkin |>
+  semi_join(potential_hirers, by = join_by(person_id == id)) |>
+  left_join(potential_hirers, by = c("person_id" = "id")) |>
+  mutate(date = ymd(date)) |>
+  select(name, event_name, date) |>
+  filter(month(date) == 12,
+         year(date) == 2017,
+         event_name == 'SQL Symphony Concert') |>
+  group_by(name) |>
+  count(event_name)
+  
+  non_hirer_concert_counts <- facebook_event_checkin |>
+  mutate(date = ymd(date)) |>
+  filter(month(date) == 12,
+        year(date) == 2017,
+        event_name == "SQL Symphony Concert") |>
+  anti_join(potential_hirers, by = join_by(person_id == id)) |>
+  left_join(person, by = join_by(person_id == id)) |>
+  count(name)
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
